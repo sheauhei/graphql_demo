@@ -1,0 +1,12 @@
+type Query {
+    places: [Place]
+}
+
+
+type Place {
+    name: String!
+    description: String!
+    country: String!
+    }  
+
+type Mutation{add_place(name: String!, description: String!, country: String!): Place}
