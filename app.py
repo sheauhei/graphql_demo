@@ -16,7 +16,7 @@ def create_app():
 
 dump_schema("schema.graphql")
 app = create_app()
-app.run()
+app.run(host="0.0.0.0", port=5000)
 
 
 # # initialize flask app
