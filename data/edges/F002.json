@@ -1,0 +1,7 @@
+{
+    "id": "F002",
+    "source": "PV002",
+    "target": "Grid",
+    "price": 5.2,
+    "sell_channel": "FIT"
+}

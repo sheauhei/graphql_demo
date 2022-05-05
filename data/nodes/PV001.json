@@ -1,0 +1,9 @@
+{
+    "id": "PV001", 
+    "name": "PV Station 001", 
+    "type": "PV",
+    "latitude": 24.8060415,
+    "longitude":121.0368687,
+    "capacity": 400,
+    "edges": ["F001"]
+}

@@ -1,12 +1,36 @@
 type Query {
-    places: [Place]
+    node(id: String!): Node
+    nodes: [Node] 
+    edge(id: String!): Edge
+    edges: [Edge]
 }
 
+type Node {
+    id: String! 
+    name: String
+    type: String!
+    latitude: Float
+    longitude: Float
+    capacity: Float
+    edges: [Edge]!
+}  
 
-type Place {
-    name: String!
-    description: String!
-    country: String!
-    }  
+type Edge {
+    id: String! 
+    from: Node!
+    to: Node!
+    price: Float
+    sell_channel: String
+}
 
-type Mutation{add_place(name: String!, description: String!, country: String!): Place}
+type TimeSeries {
+    timestamp: String
+    from: Edge
+    to: Edge
+    power: Float
+    predicted_power: Float
+    energy: Float
+    predicted_energy: Float
+    price: Float
+    revenue: Float
+}

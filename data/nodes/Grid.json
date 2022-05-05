@@ -1,0 +1,6 @@
+{
+    "id": "Grid", 
+    "name": "Taipower Grid", 
+    "type": "GRID",
+    "edges": ["F001", "F002", "F003"]
+}
