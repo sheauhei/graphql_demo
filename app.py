@@ -1,6 +1,12 @@
 from flask import Flask
 from flask_graphql import GraphQLView
 from graphql_model import schema
+from graphql.utils import schema_printer
+
+def dump_schema(filename):
+   my_schema_str = schema_printer.print_schema(schema)
+   with open(filename, "w") as fp:
+      fp.write(my_schema_str)
 
 def create_app():
     app = Flask(__name__)
@@ -8,6 +14,7 @@ def create_app():
 
     return app
 
+dump_schema("schema.graphql")
 app = create_app()
 app.run()
 

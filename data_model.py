@@ -1,54 +1,8 @@
 from utils import read_json 
 import os 
-
-# # dummy data base
-# class DummyToplogyDB():
-#     def __init__(self):
-#         self._nodes = {}
-#         self._edges = {}
-
-#     def _load_node(self, _id):
-#         node = self._nodes.get("_id")
-#         if not node: 
-#             node = Node(_id)
-#             self._nodes['_id'] = node
-#         return node
-
-#     def _load_edge(self, _id):
-#         edge = self._edges.get("_id")
-#         if not edge: 
-#             edge = Edge(_id)
-#             self._edges['_id'] = edge
-#         return edge
-
-#     def get_node(self, _id):
-#         if not _id:
-#             return None 
-#         return self._load_node(_id)
-    
-#     def get_edge(self, _id):
-#         if not _id:
-#             return None 
-
-#         return self._load_edge(_id)
-
-#     def get_nodes(self, id_list):
-#         if not id_list:
-#             return []
-
-#         return [self.get_node(id) for id in id_list]
-
-#     def get_edges(self, id_list):
-#         if not id_list:
-#             return []
-
-#         return [self.get_edge(id) for id in id_list]
-
-#     def close(self):
-#         self._nodes = {}
-#         self._edges = {}
-        
-# dummy_db = DummyToplogyDB()
+from functools import reduce
+from operator import add
+from datetime import datetime
 
 # data definitions
 class Node():
@@ -101,6 +55,77 @@ class Edge():
         # preparing edge data
         return data
 
+class StreamData():
+
+    def __init__(self, data=None):
+        if not data: 
+            data = {}
+            self.timestamp = None
+            self.price = 0
+            self.power = 0
+            self.energy = 0
+            self.predicted_power = 0
+            self.predicted_energy = 0
+            self.revenue = 0
+        else:
+            self.timestamp = datetime.strptime(data.get("timestamp"), r"%Y/%m/%d %H:%M")
+            self.price = data.get("price", 0)
+            self.power = data.get("power", 0)
+            self.energy = data.get("energy", 0)
+            self.predicted_power = data.get("predicted_power", 0)
+            self.predicted_energy = data.get("predicted_energy", 0)
+            self.revenue = self.energy * self.price
+            
+    def to_dict(self):
+        data = {
+            "timestamp": self.timestamp,
+            "price": self.price,
+            "power": self.power,
+            "energy": self.energy,
+            "predicted_power": self.predicted_power,
+            "predicted_energy": self.predicted_energy,
+            "revenue": self.revenue
+        }
+        return data
+        
+    def __add__(self, b):
+        target_sd = StreamData() 
+        target_sd.timestamp = self.timestamp
+        target_sd.power = self.power + b.power # sum([sd.power for sd in stdata_list])
+        target_sd.energy = self.energy + b.energy 
+        target_sd.predicted_power = self.predicted_power + b.predicted_power 
+        target_sd.predicted_energy = self.predicted_energy + b.predicted_energy 
+        target_sd.revenue = self.revenue + b.revenue 
+        
+        if target_sd.energy:
+            target_sd.price = target_sd.revenue / target_sd.energy
+        else:
+            target_sd.price = 0
+
+        return target_sd
+
+class StreamDataList():
+    def __init__(self, edge_id=None, time_period=None):
+        self.stream_data_list = []
+
+        if edge_id:
+            data_series = read_json(f"data/time-series/edge.{edge_id}.json")
+            self.stream_data_list = [ StreamData(data) for data in data_series]
+        
+    def to_dict(self):
+        ret = [ obj.to_dict() for obj in self.stream_data_list]
+        return ret 
+
+    def __add__(self, b):
+        target = StreamDataList()
+        length = len(self.stream_data_list)
+        
+        for i in range(length):
+            target.stream_data_list.append(self.stream_data_list[i] + b.stream_data_list[i])
+
+        return target 
+
+
 def get_node_data(id):
     node = Node(id)
     # node = dummy_db.get_node(id)
@@ -135,3 +160,38 @@ def get_all_edges_data():
     
     # get all data from node ids
     return get_edges_data(ids)
+
+def get_series_data_by_edge(edge_id):
+    series = StreamDataList(edge_id)
+    data = series.to_dict() 
+    return data
+
+def get_series_data_by_source_node(node_id):
+    data = get_node_data(node_id)
+    edges_ids = data["edge_ids"]
+    edges = get_edges_data(edges_ids)
+    
+    streamlist = []
+
+    for edge in edges:
+        if edge['source_node_id'] == node_id:
+            series_data = StreamDataList(edge['id'])
+            streamlist.append(series_data)
+
+    stream = reduce(add, streamlist) 
+    return stream.to_dict() 
+
+def get_series_data_by_target_node(node_id):
+    data = get_node_data(node_id)
+    edges_ids = data["edge_ids"]
+    edges = get_edges_data(edges_ids)
+    
+    streamlist = []
+
+    for edge in edges:
+        if edge['target_node_id'] == node_id:
+            series_data = StreamDataList(edge['id'])
+            streamlist.append(series_data)
+
+    stream = reduce(add, streamlist) 
+    return stream.to_dict() 

@@ -1,36 +1,46 @@
+schema {
+  query: Query
+}
+
+scalar DateTime
+
+type EdgeType {
+  id: String
+  price: Float
+  sellChannel: String
+  sourceNodeId: String
+  targetNodeId: String
+  source: NodeType
+  target: NodeType
+  timeSeries: [StreamDataType]
+}
+
+type NodeType {
+  id: String
+  name: String
+  type: String
+  latitude: Float
+  longitude: Float
+  capacity: Float
+  edgeIds: [String]
+  edges: [EdgeType]
+  inTimeSeries: [StreamDataType]
+  outTimeSeries: [StreamDataType]
+}
+
 type Query {
-    node(id: String!): Node
-    nodes: [Node] 
-    edge(id: String!): Edge
-    edges: [Edge]
+  node(id: String!): NodeType
+  nodes: [NodeType]
+  edge(id: String!): EdgeType
+  edges: [EdgeType]
 }
 
-type Node {
-    id: String! 
-    name: String
-    type: String!
-    latitude: Float
-    longitude: Float
-    capacity: Float
-    edges: [Edge]!
-}  
-
-type Edge {
-    id: String! 
-    from: Node!
-    to: Node!
-    price: Float
-    sell_channel: String
-}
-
-type TimeSeries {
-    timestamp: String
-    from: Edge
-    to: Edge
-    power: Float
-    predicted_power: Float
-    energy: Float
-    predicted_energy: Float
-    price: Float
-    revenue: Float
+type StreamDataType {
+  timestamp: DateTime
+  power: Float
+  energy: Float
+  predictedPower: Float
+  predictedEnergy: Float
+  price: Float
+  revenue: Float
 }
