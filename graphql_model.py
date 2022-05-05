@@ -1,56 +1,35 @@
-from ariadne import gql, QueryType, MutationType, make_executable_schema, load_schema_from_path
-from utils import read_json
-import os
+from graphene import ObjectType, String, Schema, Float, Field, List
+from data_model import dummy_db
 
-# Define type definitions (schema) using SDL
-type_defs = load_schema_from_path("schema.graphql")
 
-# Initialize query
-query = QueryType()
 
-@query.field("node")
-def resolve_query_node(obj, info, id):
-    node = Node(id) 
-    data = data = node.to_dict()
-    return data 
+class EdgeType(ObjectType):
+    id = String()
+    price = Float()
+    sell_channel = String()
+    source: Field(NodeType)
+    target: Field(NodeType)
 
-@query.field("nodes")
-def resolve_query_node(*_):
-    # enum all ids.
-    ids = []
-    for root, dirs, files in os.walk("data/nodes"):
-        for fn in files: 
-            ids.append(fn.split(".")[0])
-    
-    # get all data from node ids
-    data = []
-    for id in ids:
-        node = Node(id)
-        data.append(node.to_dict())
-    
-    return data
+class NodeType(ObjectType):
+    id = String()
+    name = String()
+    type = String()
+    latitude = Float()
+    longitude = Float()
+    capacity = Float() 
+    edges = List(EdgeType)
 
-# # data model
-# places = read_json("data/sample.json")
-# # places resolver (return places )
-# @query.field("places")
-# def resolver_places(*_):
-#    return places
+    def resolve_edges(parent, info):
+        edge_ids = parent.get("edge_ids")
+        edges = dummy_db.get_edges(edge_ids)
+        data = [edge.to_dict() for edge in edges]
+        return data
 
-class Node():
-    def __init__(self, id):
-        data = read_json(f"data/nodes/{id}.json")
-        self._data = data
-        self._id = data.get("id")
-        self._name = data.get("name")
-        self._type = data.get("type")
-        self._latitude = data.get("latitude")
-        self._longitude = data.get("longitude")
-        self._capacityv = data.get("capacity")
-        self._edges = data.get("edges")
+class Query(ObjectType):
+    node = Field(NodeType, id=String(required=True))
 
-    def to_dict(self):
-        return self._data
-        
-def build_schema():
-    return make_executable_schema(type_defs, [query,])
+    def resolve_node(parent, info, id):
+        node = dummy_db.get_node(id)
+        return node.to_dict()
+
+schema = Schema(query=Query)
