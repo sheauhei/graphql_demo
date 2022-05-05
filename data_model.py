@@ -1,53 +1,54 @@
 from utils import read_json 
+import os 
 
-# dummy data base
-class DummyToplogyDB():
-    def __init__(self):
-        self._nodes = {}
-        self._edges = {}
+# # dummy data base
+# class DummyToplogyDB():
+#     def __init__(self):
+#         self._nodes = {}
+#         self._edges = {}
 
-    def _load_node(self, _id):
-        node = self._nodes.get("_id")
-        if not node: 
-            node = Node(_id)
-            self._nodes['_id'] = node
-        return node
+#     def _load_node(self, _id):
+#         node = self._nodes.get("_id")
+#         if not node: 
+#             node = Node(_id)
+#             self._nodes['_id'] = node
+#         return node
 
-    def _load_edge(self, _id):
-        edge = self._edges.get("_id")
-        if not edge: 
-            edge = Edge(_id)
-            self._edges['_id'] = edge
-        return edge
+#     def _load_edge(self, _id):
+#         edge = self._edges.get("_id")
+#         if not edge: 
+#             edge = Edge(_id)
+#             self._edges['_id'] = edge
+#         return edge
 
-    def get_node(self, _id):
-        if not _id:
-            return None 
-        return self._load_node(_id)
+#     def get_node(self, _id):
+#         if not _id:
+#             return None 
+#         return self._load_node(_id)
     
-    def get_edge(self, _id):
-        if not _id:
-            return None 
+#     def get_edge(self, _id):
+#         if not _id:
+#             return None 
 
-        return self._load_edge(_id)
+#         return self._load_edge(_id)
 
-    def get_nodes(self, id_list):
-        if not id_list:
-            return []
+#     def get_nodes(self, id_list):
+#         if not id_list:
+#             return []
 
-        return [self.get_node(id) for id in id_list]
+#         return [self.get_node(id) for id in id_list]
 
-    def get_edges(self, id_list):
-        if not id_list:
-            return []
+#     def get_edges(self, id_list):
+#         if not id_list:
+#             return []
 
-        return [self.get_edge(id) for id in id_list]
+#         return [self.get_edge(id) for id in id_list]
 
-    def close(self):
-        self._nodes = {}
-        self._edges = {}
+#     def close(self):
+#         self._nodes = {}
+#         self._edges = {}
         
-dummy_db = DummyToplogyDB()
+# dummy_db = DummyToplogyDB()
 
 # data definitions
 class Node():
@@ -63,9 +64,6 @@ class Node():
 
         # prepare the edges
         self._edge_ids = data.get("edges")
-
-    def get_edges(self):
-        return dummy_db.get_edges(self._edge_ids)
 
     def to_dict(self):
         data = {
@@ -91,11 +89,6 @@ class Edge():
         self._source_node_id = data.get("source")
         self._target_node_id = data.get("target")
 
-    def get_from_node(self):
-        # prepare the topoplogy relationship
-        self._source_node = dummy_db.get_node(self._from_node_id)
-        self._target_node = dummy_db.get_node(self._to_node_id)
-
     def to_dict(self):
         data = {
             "id": self._id,
@@ -107,3 +100,38 @@ class Edge():
 
         # preparing edge data
         return data
+
+def get_node_data(id):
+    node = Node(id)
+    # node = dummy_db.get_node(id)
+    return node.to_dict()
+
+def get_nodes_data(id_list):
+    return [ get_node_data(id) for id in id_list]
+
+def get_all_nodes_data():
+    ids = []
+    for root, dirs, files in os.walk("data/nodes"):
+        for fn in files: 
+            ids.append(fn.split(".")[0])
+    
+    # get all data from node ids
+    data = get_nodes_data(ids)
+    return data
+
+def get_edge_data(id):
+    edge = Edge(id)
+    # edge = dummy_db.get_edge(id)
+    return edge.to_dict()
+
+def get_edges_data(id_list):
+    return [ get_edge_data(id) for id in id_list]
+
+def get_all_edges_data():
+    ids = []
+    for root, dirs, files in os.walk("data/edges"):
+        for fn in files: 
+            ids.append(fn.split(".")[0])
+    
+    # get all data from node ids
+    return get_edges_data(ids)
